@@ -1,0 +1,58 @@
+<html>
+
+<head>
+    <title>Testing IDMS</title>
+    <style>
+        body {
+            text-align: center;
+            margin: auto;
+            padding: 20%;
+        }
+
+        p {
+            margin-bottom: 10%;
+        }
+
+        p span {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h1> IndexDB Management Script (IDBMS)</h1>
+    <p>This is a <em>straightforward</em> usage of this wrapper. Nothing is happing on the GUI.
+        <strong>Please check the script</strong>.
+    </p>
+
+
+    <p>
+        <span><strong>Info:</strong></span> If you run the code twice. You are going to get an error. It's
+        not a mistake. The code attempt to set the same key multiple time.
+        To resolve error, pass true to the setItem() method as a third argument.
+    </p>
+    <!--using Es6 -->
+    <script type="module">
+        import IDBMS from "/index.js";
+
+        (async () => {
+
+            const bdb = new IDBMS(); //initialize browser db
+            if (!bdb) {
+                throw new Error("IDMS not initialized");
+            }
+            //save data
+            await bdb.setItem("auth", "7yb09sgwkuoiw.shdtqnkpodhyiabetyd.10");
+
+            //retrieve data
+            const auth_key = await bdb.getItem("auth");
+            console.log("auth_key ", auth_key);
+
+            //delete data
+            await bdb.delItem("auth");
+        })()
+
+    </script>
+</body>
+
+</html>
