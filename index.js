@@ -1,8 +1,9 @@
 'use strict'
 /*
     Description: Index DB Management script (IDBMS), is a light weight wrapper for indexdb.
-    facilitating use of index db operation amd aiming to reduce repetition in the 
+    facilitating use of index db operation with the aim of reducing repetition in the 
     process of using Index DB.
+    Author: Christian Hounkponou
 */
 
 
@@ -39,7 +40,7 @@ export default class IDBMS {
         });
     }
 
-    async setItem(key, data, extraOperationCb = null) { // Added 'data' parameter
+    async setItem(key, data, update = false, extraOperationCb = null) { // Added 'data' parameter
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.#dbName, 1);
             request.onsuccess = async (event) => {
@@ -47,12 +48,16 @@ export default class IDBMS {
                 if (extraOperationCb) {
                     newData = await extraOperationCb(data);
                 }
-                this.#operate(event, this.#action.set, this.#storeName, key, resolve, reject, newData);
+                this.#operate(event, this.#action.set, this.#storeName, key, resolve, reject, newData, update);
             };
             request.onerror = (event) => {
                 reject("Database error: " + event.target.errorCode);
             };
         });
+    }
+
+    async updateItem(key, data) {
+        return this.setItem(key, data, true);
     }
 
     async delItem(key) {
@@ -77,7 +82,7 @@ export default class IDBMS {
     }
 
     // Add, retrieve, and delete data from store
-    #operate(event, action, storeName, key, resolve, reject, data = null) {
+    #operate(event, action, storeName, key, resolve, reject, data = null, update = null) {
         if (!action) {
             return;
         }
@@ -99,7 +104,17 @@ export default class IDBMS {
                     reject("No data provided");
                     return;
                 }
-                dbRequest = objectStore.put({ id: key, data: data });
+                dbRequest = objectStore.get(key);
+                if (!dbRequest) {
+                    dbRequest = objectStore.put({ id: key, data: data });
+                } else {
+                    if (update) {
+                        dbRequest = objectStore.put({ id: key, data: data });
+                    } else {
+                        reject("IDMS Error: 'Error occurred in setItem() due to Duplicate key. If you intend to override data, pass true as third param to the setItem() method.'");
+                    }
+                }
+
                 break;
             case this.#action.del:
                 dbRequest = objectStore.delete(key);
