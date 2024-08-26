@@ -7,6 +7,7 @@
 */
 
 
+
 export default class IDBMS {
 
     #dbName = "alaanu";
@@ -32,7 +33,7 @@ export default class IDBMS {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.#dbName, 1);
             request.onsuccess = (event) => {
-                return this.#operate(event, this.#action.get, this.#storeName, key, resolve, reject);
+                return this.#operate({ event, action: this.#action.get, storeName: this.#storeName, key, resolve, reject });
             };
             request.onerror = (event) => {
                 reject("Database error: " + event.target.errorCode);
@@ -40,15 +41,11 @@ export default class IDBMS {
         });
     }
 
-    async setItem(key, data, update = false, extraOperationCb = null) { // Added 'data' parameter
+    async setItem(key, data, update = false,) { // Added 'data' parameter
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.#dbName, 1);
             request.onsuccess = async (event) => {
-                let newData = data;
-                if (extraOperationCb) {
-                    newData = await extraOperationCb(data);
-                }
-                this.#operate(event, this.#action.set, this.#storeName, key, resolve, reject, newData, update);
+                this.#operate({ event, action: this.#action.set, storeName: this.#storeName, key, resolve, reject, data, update });
             };
             request.onerror = (event) => {
                 reject("Database error: " + event.target.errorCode);
@@ -64,7 +61,7 @@ export default class IDBMS {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.#dbName, 1);
             request.onsuccess = (event) => {
-                return this.#operate(event, this.#action.del, this.#storeName, key, resolve, reject);
+                return this.#operate({ event, action: this.#action.del, storeName: this.#storeName, key: key, resolve, reject });
             };
             request.onerror = (event) => {
                 reject("Database error: " + event.target.errorCode);
@@ -82,7 +79,7 @@ export default class IDBMS {
     }
 
     // Add, retrieve, and delete data from store
-    #operate(event, action, storeName, key, resolve, reject, data = null, update = null) {
+    async #operate({ event, action, storeName, key, resolve, reject, data = null, update = null }) {
         if (!action) {
             return;
         }
@@ -104,12 +101,16 @@ export default class IDBMS {
                     reject("No data provided");
                     return;
                 }
+                const isDataFunction = typeof (data) === "function";
                 dbRequest = objectStore.get(key);
-                if (!dbRequest) {
+                if (!dbRequest && !isDataFunction) {
                     dbRequest = objectStore.put({ id: key, data: data });
                 } else {
                     if (update) {
                         dbRequest = objectStore.put({ id: key, data: data });
+                    } else if (isDataFunction) {
+                        dbRequest = await data(dbRequest);
+                        dbRequest = objectStore.put({ id: key, data: dbRequest });
                     } else {
                         reject("IDMS Error: 'Error occurred in setItem() due to Duplicate key. If you intend to override data, pass true as third param to the setItem() method.'");
                     }
@@ -182,7 +183,6 @@ export default class IDBMS {
         }
     }
 }
-
 
 
 

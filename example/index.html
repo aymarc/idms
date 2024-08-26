@@ -42,8 +42,12 @@
                 throw new Error("IDMS not initialized");
             }
             //save data
-            await bdb.setItem("auth", "7yb09sgwkuoiw.shdtqnkpodhyiabetyd.10");
+            await bdb.setItem("auth", { authKey: "7yb09sgwkuoiw.shdtqnkpodhyiabetyd.10" }, true);
 
+            // const newData = { authKey: "7yb09sgwkuoiw.shdtqnkpodhyiabetyd.11", expiry: 838940 };
+            // await bdb.setItem("auth", (prevData) => {
+            //     return { ...prevData, ...newData }
+            // });
             //retrieve data
             const auth_key = await bdb.getItem("auth");
             console.log("auth_key ", auth_key);

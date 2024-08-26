@@ -3,7 +3,7 @@
 
 ## Description
 Index DB Management Script (IDBMS) is a light weight wrapper for indexdb
-that facilitates the use of index db and reduce repetition apparent in the 
+that facilitates the use of index db and reduces the apparent repetition  in the 
 process of using Index DB.
 The solution is simple and OOP based. Can easily be extended or embedded into
 a larger system.
